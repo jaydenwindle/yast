@@ -1,0 +1,6 @@
+{
+  "keyMain": {
+    "user": "YOUR_USER_NAME",
+    "passphrase": "YOUR_ENCRYPTED_SSH_KEY_PASSPHRASE"
+  }
+}

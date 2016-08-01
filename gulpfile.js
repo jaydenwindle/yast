@@ -2,10 +2,13 @@ var gulp        = require('gulp');
 var $           = require('gulp-load-plugins')();
 var browserSync = require('browser-sync').create();
 var sourcemaps  = require('gulp-sourcemaps');
+var changed     = require('gulp-changed');
 var rename      = require('gulp-rename');
 var ftp         = require('vinyl-ftp');
+var sftp        = require('gulp-sftp');
 var gutil       = require('gulp-util');
 var clean       = require('gulp-clean-css');
+var uglify      = require('gulp-uglify');
 var header      = require('gulp-header');
 var pkg         = require('./package.json');
 
@@ -19,16 +22,17 @@ var config = {
         ]
     },
     sass: {
+        // directories to include while compiling main sass file
         sassPaths: [
-            'bower_components/bootstrap-sass/assets/stylesheets/',
-            'bower_components/font-awesome/scss'
+            './bower_components/bootstrap-sass/assets/stylesheets/',
+            './bower_components/font-awesome/scss'
         ]
     },
     ftp: {
-        host: '',
-        user: '',
-        pass: '',
-        port: 21,
+        host: 'YOUR_DOMAIN_NAME',
+        user: 'YOUR_USER_NAME',
+        pass: 'YOUR_PASSWORD',
+        port: 21, // note: change this when switching from ftp to sftp
         files: [
             './bower_components/**/*',
             './img/**/*',
@@ -37,7 +41,8 @@ var config = {
             './*.css',
             './*.php'
         ],
-        remoteFolder: ''
+        remotePath: '',
+        protocol: 'ftp' // 'ftp' or 'sftp'
     },
     wp: {
         banner: [
@@ -54,7 +59,7 @@ var config = {
 };
 
 gulp.task('sass', function() {
-    return gulp.src('scss/style.scss')
+    return gulp.src('./scss/style.scss')
         // .pipe(sourcemaps.init()) enable for debugging
         .pipe($.sass({
                 includePaths: config.sass.sassPaths
@@ -69,6 +74,15 @@ gulp.task('sass', function() {
         .pipe(gulp.dest('.'));
 });
 
+gulp.task('js', function () {
+    return gulp.src('./js/*.js')
+        .pipe(uglify())
+        .pipe(rename({
+            suffix: '.min'
+        }))
+        .pipe(gulp.dest('./js'));
+});
+
 gulp.task('browser-sync', function() {
     browserSync.init({
         server: {
@@ -79,40 +93,68 @@ gulp.task('browser-sync', function() {
 });
 
 gulp.task('deploy', function() {
-    var conn = ftp.create({
-        host: config.ftp.host,
-        port: config.ftp.port,
-        user: config.ftp.user,
-        password: config.ftp.pass,
-        parallel: 5,
-        log: gutil.log
-    });
+    if (config.ftp.protocol == 'sftp') {
+        return gulp.src(config.ftp.files, { base: '.', buffer: false })
+            .pipe(changed('.')) // only upload newer files
+            .pipe(sftp({
+                host: config.ftp.host,
+                user: config.ftp.user,
+                auth: 'keyMain',
+                remotePath: config.ftp.remotePath
+            }));
+    } else if (config.ftp.protocol == 'ftp') {
+        var conn = ftp.create({
+            host: config.ftp.host,
+            port: config.ftp.port,
+            user: config.ftp.user,
+            password: config.ftp.pass,
+            parallel: 5,
+            log: gutil.log
+        });
 
-    return gulp.src(config.ftp.files, { base: '.', buffer: false })
-        .pipe( conn.newer( config.ftp.remoteFolder ) ) // only upload newer files
-        .pipe( conn.dest( config.ftp.remoteFolder ) );
+        return gulp.src(config.ftp.files, { base: '.', buffer: false })
+            .pipe( conn.newer( config.ftp.remoteFolder ) ) // only upload newer files
+            .pipe( conn.dest( config.ftp.remoteFolder ) );
+    }
 });
 
 gulp.task('deploy-watch', ['sass', 'deploy'], function() {
-    var conn = ftp.create({
-        host: config.ftp.host,
-        port: config.ftp.port,
-        user: config.ftp.user,
-        password: config.ftp.pass,
-        parallel: 5,
-        log: gutil.log
-    });
+    if (config.ftp.protocol == 'sftp') {
+        gulp.watch(['./scss/**/*.scss'], ['sass']);
+        gulp.watch(['./js/**/*.scss'], ['js']);
+        gulp.watch(config.ftp.files, function(event) {
+            console.log('Change detected. Uploading file...');
+            return gulp.src( [event.path], { base: '.', buffer: false } )
+            .pipe(sftp({
+                host: config.ftp.host,
+                user: config.ftp.user,
+                auth: 'keyMain',
+                remotePath: config.ftp.remotePath 
+            }));
+        });
+    } else if (config.ftp.protocol == 'ftp') {
+        var conn = ftp.create({
+            host: config.ftp.host,
+            port: config.ftp.port,
+            user: config.ftp.user,
+            password: config.ftp.pass,
+            parallel: 5,
+            log: gutil.log
+        });
 
-    gulp.watch(['scss/**/*.scss'], ['sass']);
-    gulp.watch(config.ftp.files, function(event) {
-        console.log('Change detected. Uploading file...');
-        return gulp.src( [event.path], { base: '.', buffer: false } )
-        .pipe( conn.newer( config.ftp.remoteFolder ) ) // only upload newer files
-        .pipe( conn.dest( config.ftp.remoteFolder ) );
-    });
+        gulp.watch(['./scss/**/*.scss'], ['sass']);
+        gulp.watch(['./js/**/*.scss'], ['js']);
+        gulp.watch(config.ftp.files, function(event) {
+            console.log('Change detected. Uploading file...');
+            return gulp.src( [event.path], { base: '.', buffer: false } )
+            .pipe( conn.newer( config.ftp.remoteFolder ) ) // only upload newer files
+            .pipe( conn.dest( config.ftp.remoteFolder ) );
+        });
+    }
 });
 
-gulp.task('default', ['sass', 'browser-sync'], function() {
-    gulp.watch(['./**/*.scss'], ['sass']);
+gulp.task('default', ['sass', 'js', 'browser-sync'], function() {
+    gulp.watch(['./scss/**/*.scss'], ['sass']);
+    gulp.watch(['./js/**/*.scss'], ['js']);
     gulp.watch(config.browsersync.watch).on('change', browserSync.reload);
 });
