@@ -1,0 +1,29 @@
+{
+  "name": "yetanotherstartertemplate",
+  "description": "A super simple and ultra light starter template for developing with bootstrap, sass, and gulp",
+  "main": "gulpfile.js",
+  "authors": [
+    "Jayden Windle"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "starter-template",
+    "bootstrap",
+    "sass",
+    "gulp",
+    "quick-start"
+  ],
+  "homepage": "jaydenwindle.com",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap-sass": "^3.3.7",
+    "font-awesome": "^4.6.3"
+  }
+}

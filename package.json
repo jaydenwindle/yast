@@ -1,0 +1,25 @@
+{
+  "name": "YetAnotherStarterTemplate",
+  "version": "1.0.0",
+  "description": "A super simple and ultra light starter template for developing with bootstrap, sass, and gulp",
+  "author": "Jayden Windle",
+  "authorURI": "http://jaydenwindle.com",
+  "main": "gulpfile.js",
+  "devDependencies": {
+    "browser-sync": "^2.14.0",
+    "gulp": "^3.9.0",
+    "gulp-autoprefixer": "^3.1.0",
+    "gulp-clean-css": "^2.0.6",
+    "gulp-header": "^1.8.2",
+    "gulp-load-plugins": "^1.1.0",
+    "gulp-sass": "^2.1.0",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-util": "^3.0.7",
+    "vinyl-ftp": "^0.4.5"
+  },
+  "scripts": {
+    "start": "gulp",
+    "build": "gulp sass"
+  },
+  "dependencies": {}
+}
