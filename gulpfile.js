@@ -10,22 +10,22 @@ var gutil       = require('gulp-util');
 var clean       = require('gulp-clean-css');
 var uglify      = require('gulp-uglify');
 var header      = require('gulp-header');
-var pkg         = require('./package.json');
+var pkg         = require('package.json');
 
 var config = {
     browsersync: {
         // array of files and folders to watch for changes
         watch: [
-            './js/**/*.js',
-            './**/*.html',
-            './*.css',
+            'src/src/js/**/*.js',
+            '**/*.html',
+            '*.css',
         ]
     },
     sass: {
         // directories to include while compiling main sass file
         sassPaths: [
-            './bower_components/bootstrap-sass/assets/stylesheets/',
-            './bower_components/font-awesome/scss'
+            'bower_components/bootstrap-sass/assets/stylesheets/',
+            'bower_components/font-awesome/scss'
         ]
     },
     ftp: {
@@ -34,12 +34,12 @@ var config = {
         pass: 'YOUR_PASSWORD',
         port: 21, // note: change this when switching from ftp to sftp
         files: [
-            './bower_components/**/*',
-            './img/**/*',
-            './js/**/*',
-            './*.html',
-            './*.css',
-            './*.php'
+            'bower_components/**/*',
+            'img/**/*',
+            'src/js/**/*',
+            '*.html',
+            '*.css',
+            '*.php'
         ],
         remotePath: '',
         protocol: 'ftp' // 'ftp' or 'sftp'
@@ -59,8 +59,8 @@ var config = {
 };
 
 gulp.task('sass', function() {
-    return gulp.src('./scss/style.scss')
-        // .pipe(sourcemaps.init()) enable for debugging
+    return gulp.src('src/src/scss/style.scss')
+        // .pipe(sourcemaps.init()) // enable for debugging
         .pipe($.sass({
                 includePaths: config.sass.sassPaths
             })
@@ -75,18 +75,18 @@ gulp.task('sass', function() {
 });
 
 gulp.task('js', function () {
-    return gulp.src('./js/*.js')
+    return gulp.src('src/js/**/*.js')
         .pipe(uglify())
         .pipe(rename({
             suffix: '.min'
         }))
-        .pipe(gulp.dest('./js'));
+        .pipe(gulp.dest('js'));
 });
 
 gulp.task('browser-sync', function() {
     browserSync.init({
         server: {
-            baseDir: "./"
+            baseDir: ""
         },
         notify: false
     });
@@ -120,8 +120,8 @@ gulp.task('deploy', function() {
 
 gulp.task('deploy-watch', ['sass', 'deploy'], function() {
     if (config.ftp.protocol == 'sftp') {
-        gulp.watch(['./scss/**/*.scss'], ['sass']);
-        gulp.watch(['./js/**/*.scss'], ['js']);
+        gulp.watch(['src/scss/**/*.scss'], ['sass']);
+        gulp.watch(['src/js/**/*.js'], ['js']);
         gulp.watch(config.ftp.files, function(event) {
             console.log('Change detected. Uploading file...');
             return gulp.src( [event.path], { base: '.', buffer: false } )
@@ -142,8 +142,8 @@ gulp.task('deploy-watch', ['sass', 'deploy'], function() {
             log: gutil.log
         });
 
-        gulp.watch(['./scss/**/*.scss'], ['sass']);
-        gulp.watch(['./js/**/*.scss'], ['js']);
+        gulp.watch(['src/scss/**/*.scss'], ['sass']);
+        gulp.watch(['src/js/**/*.js'], ['js']);
         gulp.watch(config.ftp.files, function(event) {
             console.log('Change detected. Uploading file...');
             return gulp.src( [event.path], { base: '.', buffer: false } )
@@ -154,7 +154,7 @@ gulp.task('deploy-watch', ['sass', 'deploy'], function() {
 });
 
 gulp.task('default', ['sass', 'js', 'browser-sync'], function() {
-    gulp.watch(['./scss/**/*.scss'], ['sass']);
-    gulp.watch(['./js/**/*.scss'], ['js']);
+    gulp.watch(['src/scss/**/*.scss'], ['sass']);
+    gulp.watch(['src/js/**/*.js'], ['js']);
     gulp.watch(config.browsersync.watch).on('change', browserSync.reload);
 });
