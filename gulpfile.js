@@ -59,7 +59,7 @@ var config = {
 };
 
 gulp.task('sass', function() {
-    return gulp.src('src/scss/style.scss')
+    return gulp.src('src/scss/**/*.scss')
         .pipe(sourcemaps.init()) // enable for debugging
         .pipe($.sass({
                 includePaths: config.sass.sassPaths
@@ -88,7 +88,8 @@ gulp.task('browser-sync', ['sass', 'js'], function() {
         server: {
             baseDir: ""
         },
-        notify: false
+        notify: false,
+        online: true
     });
 
     gulp.watch(['src/scss/**/*.scss'], ['sass']);
