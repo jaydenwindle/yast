@@ -10,13 +10,13 @@ var gutil       = require('gulp-util');
 var clean       = require('gulp-clean-css');
 var uglify      = require('gulp-uglify');
 var header      = require('gulp-header');
-var pkg         = require('package.json');
+var pkg         = require('./package.json');
 
 var config = {
     browsersync: {
         // array of files and folders to watch for changes
         watch: [
-            'src/src/js/**/*.js',
+            'js/**/*.js',
             '**/*.html',
             '*.css',
         ]
@@ -36,7 +36,7 @@ var config = {
         files: [
             'bower_components/**/*',
             'img/**/*',
-            'src/js/**/*',
+            'js/**/*',
             '*.html',
             '*.css',
             '*.php'
@@ -59,8 +59,8 @@ var config = {
 };
 
 gulp.task('sass', function() {
-    return gulp.src('src/src/scss/style.scss')
-        // .pipe(sourcemaps.init()) // enable for debugging
+    return gulp.src('src/scss/style.scss')
+        .pipe(sourcemaps.init()) // enable for debugging
         .pipe($.sass({
                 includePaths: config.sass.sassPaths
             })
@@ -70,7 +70,7 @@ gulp.task('sass', function() {
         }))
         .pipe(clean())
         .pipe(header(config.wp.banner, { pkg : pkg }))
-        // .pipe(sourcemaps.write())
+        .pipe(sourcemaps.write())
         .pipe(gulp.dest('.'));
 });
 
@@ -83,14 +83,19 @@ gulp.task('js', function () {
         .pipe(gulp.dest('js'));
 });
 
-gulp.task('browser-sync', function() {
+gulp.task('browser-sync', ['sass', 'js'], function() {
     browserSync.init({
         server: {
             baseDir: ""
         },
         notify: false
     });
+
+    gulp.watch(['src/scss/**/*.scss'], ['sass']);
+    gulp.watch(['src/js/**/*.js'], ['js']);
+    gulp.watch(config.browsersync.watch).on('change', browserSync.reload);
 });
+
 
 gulp.task('deploy', function() {
     if (config.ftp.protocol == 'sftp') {
@@ -153,8 +158,4 @@ gulp.task('deploy-watch', ['sass', 'deploy'], function() {
     }
 });
 
-gulp.task('default', ['sass', 'js', 'browser-sync'], function() {
-    gulp.watch(['src/scss/**/*.scss'], ['sass']);
-    gulp.watch(['src/js/**/*.js'], ['js']);
-    gulp.watch(config.browsersync.watch).on('change', browserSync.reload);
-});
+gulp.task('default', ['browser-sync']);
